@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Expense Tracker</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 10px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 768px) {
+            .container {
+                padding: 30px;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 30px;
+            }
+            body {
+                padding: 20px;
+            }
+        }
+        .left-panel {
+            grid-column: 1;
+        }
+        .right-panel {
+            grid-column: 1;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        @media (min-width: 768px) {
+            .right-panel {
+                grid-column: 2;
+                border-top: none;
+                border-left: 1px solid #eee;
+                padding-top: 0;
+                padding-left: 30px;
+            }
+        }
+        h1, h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        @media (min-width: 576px) {
+            .form-row {
+                flex-direction: row;
+                align-items: center;
+                gap: 15px;
+            }
+        }
+        select, input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        select {
+            min-width: 120px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .action-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .transaction-list {
+            margin-top: 30px;
+            max-width: 100%;
+            padding: 15px;
+        }
+        .transaction-card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .transaction-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .transaction-details {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .transaction-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .transaction-value {
+            color: #333;
+        }
+        .summary {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .summary p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .chart {
+            margin-top: 30px;
+            height: 400px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .action-buttons a {
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        .export-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .logout-btn {
+            background-color: #ff4444;
+            color: white;
+        }
+        .cancel-btn {
+            background-color: #ff4444;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="header-actions">
+                <h1>Welcome {{ name }}!</h1>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+            
+            <div class="form-group">
+            <h2>Add Transaction</h2>
+            <form method="post" action="/add_transaction">
+                <div class="form-row">
+                    <select name="type" required>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                    <input type="text" name="description" placeholder="Description" required>
+                    <input type="number" name="amount" placeholder="Amount" step="0.01" required>
+                    <button type="submit">Add</button>
+                </div>
+            </form>
+            <div class="action-row">
+                <a href="/cancel_last" class="cancel-btn">Cancel Last Transaction</a>
+            </div>
+        </div>
+
+        <div class="transaction-list">
+            <h2>Recent Transactions</h2>
+            {% for transaction in transactions %}
+            <div class="transaction-card">
+                <div class="transaction-details">
+                    <span class="transaction-label">Type:</span>
+                    <span class="transaction-value">{{ transaction.type }}</span>
+                    
+                    <span class="transaction-label">Description:</span>
+                    <span class="transaction-value">{{ transaction.description }}</span>
+                    
+                    <span class="transaction-label">Amount:</span>
+                    <span class="transaction-value">₹{{ "%.2f"|format(transaction.amount) }}</span>
+                    
+                    <span class="transaction-label">Date:</span>
+                    <span class="transaction-value">{{ transaction.date }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="summary">
+            <h2>Summary</h2>
+            <p>Total Income: ₹{{ "%.2f"|format(total_income) }}</p>
+            <p>Total Expenses: ₹{{ "%.2f"|format(total_expenses) }}</p>
+            <p>Balance: ₹{{ "%.2f"|format(total_income - total_expenses) }}</p>
+        </div>
+        </div>
+        <div class="right-panel">
+            <div id="expenseChart" class="chart"></div>
+        </div>
+    </div>
+    
+    <script>
+        const data = {{ chart_data|tojson }};
+        Plotly.newPlot('expenseChart', [{
+            values: data.values,
+            labels: data.labels,
+            type: 'pie'
+        }], {
+            title: 'Expense Distribution'
+        });
+    </script>
+</body>
+</html>
